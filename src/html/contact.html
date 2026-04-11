@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>Contact Us - SwiftCyber</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/contact.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body class="contact-page">
+    <header>
+        <div class="header-content">
+            <div class="header-top">
+                <div class="header-brand">
+                    <h1>SwiftCyber</h1>
+                </div>
+                <button type="button" class="contact-menu-toggle" id="contact-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="contact-header-nav">
+                    <i class="fas fa-bars menu-icon-bars" aria-hidden="true"></i>
+                    <i class="fas fa-xmark menu-icon-close" aria-hidden="true"></i>
+                </button>
+            </div>
+            <nav class="contact-header-nav" id="contact-header-nav" aria-label="Main">
+                <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="#" class="active"><i class="fas fa-envelope"></i> Contact</a>
+                <a href="/" class="contact-logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <h2>Contact SwiftCyber</h2>
+            <div class="form-section">
+                <form id="contactForm">
+                    <div>
+                        <label for="cyberId">Cyber ID</label>
+                        <input type="text" id="cyberId" name="cyberId" required readonly>
+                    </div>
+                    <div>
+                        <label for="subject">Subject</label>
+                        <select id="subject" name="subject" required>
+                            <option value="">Please select a subject</option>
+                            <option value="inquiry">General Inquiry</option>
+                            <option value="support">Technical Support</option>
+                            <option value="partnership">Partnership Opportunities</option>
+                            <option value="feedback">Feedback</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required placeholder="Your message here..."></textarea>
+                    </div>
+                    <button type="submit">Send Message</button>
+                </form>
+            </div>
+            <div class="info-section">
+                <div class="contact-info">
+                    <h3>Get in Touch</h3>
+                    <p><i class="fas fa-envelope"></i> Email: abyglobals@gmail.com</p>
+                    <p><i class="fas fa-phone"></i> Phone: +254 701 652148</p>
+                    <p><i class="fas fa-map-marker-alt"></i> Address: AB&Y Global, Eastleigh, Nairobi, Kenya</p>
+                    <div class="social-links">
+                        <a href="https://x.com/abyglobals" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://LinkedIn.com/ABYGLOBALS" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        <a href="https://instagram.com/abyglobals" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 SwiftCyber. All rights reserved.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            (function setupContactMobileNav() {
+                const toggle = document.getElementById('contact-menu-toggle');
+                const nav = document.getElementById('contact-header-nav');
+                if (!toggle || !nav) return;
+                const mq = window.matchMedia('(max-width: 900px)');
+                const setOpen = (open) => {
+                    nav.classList.toggle('is-open', open);
+                    toggle.classList.toggle('is-open', open);
+                    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                    toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                    document.body.classList.toggle('contact-nav-open', open && mq.matches);
+                };
+                const closeIfDesktop = () => {
+                    if (!mq.matches) {
+                        nav.classList.remove('is-open');
+                        toggle.classList.remove('is-open');
+                        toggle.setAttribute('aria-expanded', 'false');
+                        toggle.setAttribute('aria-label', 'Open menu');
+                        document.body.classList.remove('contact-nav-open');
+                    }
+                };
+                closeIfDesktop();
+                toggle.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!mq.matches) return;
+                    setOpen(!nav.classList.contains('is-open'));
+                });
+                nav.querySelectorAll('a').forEach((a) => {
+                    a.addEventListener('click', (ev) => {
+                        if (a.getAttribute('href') === '#') ev.preventDefault();
+                        if (mq.matches) setOpen(false);
+                    });
+                });
+                document.addEventListener('click', (e) => {
+                    if (!nav.classList.contains('is-open') || !mq.matches) return;
+                    if (toggle.contains(e.target) || nav.contains(e.target)) return;
+                    setOpen(false);
+                });
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && nav.classList.contains('is-open')) setOpen(false);
+                });
+                const onMq = () => closeIfDesktop();
+                if (typeof mq.addEventListener === 'function') mq.addEventListener('change', onMq);
+                else if (typeof mq.addListener === 'function') mq.addListener(onMq);
+            })();
+
+            let cafeId;
+            
+            try {
+                // First try to get cafeId from URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                cafeId = urlParams.get('cafeId');
+        
+                // If not in URL, try to get from server
+                if (!cafeId) {
+                    const response = await fetch('/dashboard/get-unique-id');
+                    const data = await response.json();
+                    if (response.ok && data.uniqueId) {
+                        cafeId = data.uniqueId;
+                    } else {
+                        throw new Error('Failed to get cafe ID');
+                    }
+                }
+        
+                // Set the Cyber ID in the input field
+                document.getElementById('cyberId').value = cafeId;
+                
+                // Update dashboard link to maintain cafeId
+                const dashboardLink = document.querySelector('a[href="/dashboard"]');
+                if (dashboardLink) {
+                    dashboardLink.href = `/dashboard?cafeId=${cafeId}`;
+                }
+        
+                // Fetch cafe details if needed
+                try {
+                    const response = await fetch(`/contact/api/cafe/${cafeId}`);
+                    const data = await response.json();
+        
+                    if (response.ok) {
+                        // You can use cafe details here if needed
+                        console.log('Cafe details loaded successfully');
+                    } else {
+                        console.error('Failed to fetch cafe details:', data.message);
+                    }
+                } catch (error) {
+                    console.error('Error fetching cafe details:', error);
+                }
+        
+            } catch (error) {
+                console.error('Error initializing contact page:', error);
+                alert('Error loading cafe information. Please try logging in again.');
+                window.location.href = '/login';
+            }
+        
+            // Handle form submission
+            const contactForm = document.getElementById('contactForm');
+            contactForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+        
+                const formData = {
+                    cyberId: document.getElementById('cyberId').value,
+                    subject: document.getElementById('subject').value,
+                    message: document.getElementById('message').value
+                };
+        
+                try {
+                    const response = await fetch('/contact/api/contact', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formData)
+                    });
+        
+                    const data = await response.json();
+        
+                    if (response.ok) {
+                        alert('Thank you for your message! We will get back to you soon.');
+                        document.getElementById('subject').value = '';
+                        document.getElementById('message').value = '';
+                    } else {
+                        alert(data.message || 'Failed to send message. Please try again.');
+                    }
+                } catch (error) {
+                    console.error('Error sending message:', error);
+                    alert('An error occurred while sending your message. Please try again later.');
+                }
+            });
+        
+            // Handle logout
+            const logoutLink = document.querySelector('a.contact-logout[href="/"]');
+            if (logoutLink) {
+                logoutLink.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    try {
+                        const response = await fetch('/auth/logout', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        });
+
+                        if (response.ok) {
+                            localStorage.clear();
+                            sessionStorage.clear();
+                            window.history.pushState(null, '', '/login');
+                            window.onpopstate = function() {
+                                window.history.pushState(null, '', '/login');
+                            };
+                            window.location.replace('/login');
+                        } else {
+                            throw new Error('Logout failed');
+                        }
+                    } catch (error) {
+                        console.error('Error during logout:', error);
+                        alert('Failed to logout. Please try again.');
+                    }
+                });
+            }
+        });
+        </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

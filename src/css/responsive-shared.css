@@ -1,0 +1,85 @@
+/* Global mobile-friendly defaults (loaded after page styles) */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+img,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+@media (max-width: 480px) {
+  body:has(.login-container),
+  body:has(#signupPage),
+  body:has(#verificationPage),
+  body:has(#welcomePage),
+  body:has(form#resetForm),
+  body:has(.upload-area),
+  body.admin-body {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+
+  /* Center auth cards vertically on small screens */
+  body:has(.login-container),
+  body:has(#signupPage) {
+    padding-top: max(12px, env(safe-area-inset-top));
+    align-items: center;
+    justify-content: center;
+    min-height: 100dvh;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  body:has(#verificationPage),
+  body:has(#welcomePage),
+  body:has(form#resetForm) {
+    padding-top: max(12px, env(safe-area-inset-top));
+    align-items: flex-start;
+    min-height: 100dvh;
+  }
+
+  .login-container,
+  #signupPage {
+    padding: 1.5rem 1.1rem;
+    width: 100%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    flex-shrink: 0;
+  }
+
+  .input-field,
+  input[type='email'],
+  input[type='password'],
+  input[type='text'],
+  input[type='tel'],
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  #verificationPage,
+  #welcomePage {
+    padding: 1.25rem;
+    margin: 12px auto;
+    width: calc(100% - 24px);
+    box-sizing: border-box;
+  }
+
+  body:has(.upload-area) .container {
+    max-width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  body.dashboard-page,
+  body.contact-page {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}

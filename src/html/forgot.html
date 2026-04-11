@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>Reset Password</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="../css/forgot.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body>
+    <div class="container">
+        <h2>Reset Password</h2>
+        
+        <form id="resetForm" action="/pass_reset/reset-password" method="POST">
+            <input 
+                type="email" 
+                id="resetEmail" 
+                placeholder="Enter your email" 
+                required
+            >
+            <button type="submit">Send Reset Link</button>
+            <p>
+                Remembered your password?
+                <a href="/login">Back to Login</a>
+            </p>
+        </form>
+        
+        <!-- Add loading indicator -->
+        <div id="loadingIndicator" style="display: none;">
+            Sending reset link...
+        </div>
+
+        <!-- Add status message -->
+        <div id="statusMessage" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById('resetForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('resetEmail').value;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const statusMessage = document.getElementById('statusMessage');
+            const submitButton = this.querySelector('button');
+            
+            try {
+                // Show loading state
+                loadingIndicator.style.display = 'block';
+                submitButton.disabled = true;
+                statusMessage.style.display = 'none';
+                
+                const response = await fetch('/pass_reset/reset-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    statusMessage.style.color = 'green';
+                    statusMessage.textContent = `Password reset link sent to ${email}. Please check your inbox.`;
+                    document.getElementById('resetEmail').value = ''; // Clear the email input
+                } else {
+                    throw new Error(data.message || 'Failed to send reset link');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                statusMessage.style.color = 'red';
+                statusMessage.textContent = error.message;
+            } finally {
+                // Hide loading state and show status
+                loadingIndicator.style.display = 'none';
+                statusMessage.style.display = 'block';
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header styles */
+header {
+    background-color: #3c4252;
+    color: white;
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.last-updated {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Main content */
+main {
+    padding: 2rem 0;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+/* Section styling */
+section {
+    margin-bottom: 3rem;
+    padding: 0 2rem;
+}
+
+section:last-child {
+    margin-bottom: 0;
+}
+
+/* Headings */
+h2 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #eee;
+}
+
+h3 {
+    color: #34495e;
+    font-size: 1.4rem;
+    margin: 1.5rem 0 1rem;
+}
+
+/* Lists */
+ul {
+    list-style-position: inside;
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+li {
+    margin-bottom: 0.5rem;
+    color: #555;
+}
+
+/* Paragraphs */
+p {
+    margin-bottom: 1rem;
+    color: #555;
+}
+
+/* Footer */
+footer {
+    background-color: #3c4252;
+    color: white;
+    padding: 1.5rem 0;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+footer p {
+    color: white;
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+/* Links */
+a {
+    color: #3498db;
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+a:hover {
+    color: #2980b9;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    section {
+        padding: 0 1rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    h3 {
+        font-size: 1.2rem;
+    }
+
+    .container {
+        padding: 0 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    header h1 {
+        font-size: 1.8rem;
+    }
+
+    section {
+        padding: 0 0.8rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    ul {
+        padding-left: 1rem;
+    }
+}
+
+/* Print styles */
+@media print {
+    body {
+        background: white;
+    }
+
+    main {
+        box-shadow: none;
+    }
+
+    header {
+        background: none;
+        color: black;
+    }
+
+    footer {
+        background: none;
+        color: black;
+    }
+
+    a {
+        text-decoration: underline;
+    }
+}

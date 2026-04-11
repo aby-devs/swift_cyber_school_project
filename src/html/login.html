@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>Cyber Cafe Login</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/login.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body>
+    <div class="login-container">
+        <h2 class="login-heading">Login to Cyber Cafe</h2>
+        
+        <form id="loginForm" class="login-form" action="/auth/api/login" method="POST">
+            <input 
+                type="email" 
+                id="email" 
+                placeholder="Email" 
+                required
+                class="input-field"
+            >
+            
+            <div class="password-container">
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Password" 
+                    required 
+                    class="input-field"
+                >
+                <i id="togglePassword" class="far fa-eye password-toggle"></i>
+            </div>
+            
+            <div class="remember-forgot">
+                <label class="remember-label">
+                    <input 
+                        type="checkbox" 
+                        id="rememberMe" 
+                        class="remember-checkbox"
+                    >
+                    Remember me
+                </label>
+                <a href="/forgot" class="forgot-password">
+                    Forgot Password?
+                </a>
+            </div>
+            
+            <button type="submit" class="submit-button">Login</button>
+            
+            <p class="signup-link">
+                Don't have an account? 
+                <a href="/signup" class="signup-link-text">Sign Up</a>
+            </p>
+        </form>
+    </div>
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check for remembered email
+            const urlParams = new URLSearchParams(window.location.search);
+            const errorMessage = urlParams.get('error');
+            if (errorMessage) {
+                alert(decodeURIComponent(errorMessage));
+            }
+
+            // Handle form submission
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const rememberMe = document.getElementById('rememberMe').checked;
+
+                try {
+                    const response = await fetch('/auth/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            email, 
+                            password,
+                            rememberMe 
+                        }),
+                        credentials: 'include' // Important for cookies
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        // If login successful, redirect to dashboard with cafeId
+                        window.location.href = `/dashboard?cafeId=${data.cafeId}`;
+                    } else {
+                        // Handle specific error messages
+                        const errorMessage = data.message || 'Login failed. Please try again.';
+                        alert(errorMessage);
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    alert('An error occurred during login. Please try again.');
+                }
+            });
+
+            // Password visibility toggle
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+
+                // Toggle icon
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        });
+        </script>
+    <script src="/js/pwa-register.js"></script>
+    </body>
+</html>

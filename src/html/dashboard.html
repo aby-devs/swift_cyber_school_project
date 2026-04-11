@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>SwiftCyber Dashboard</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body class="dashboard-page">
+<header>
+    <div class="header-content">
+        <div class="header-left">
+            <h1>SwiftCyber Dashboard</h1>
+        </div>
+        <nav class="header-nav" id="dashboard-header-nav" aria-label="Main">
+            <div class="nav-group">
+                <a href="#" class="nav-link active">
+                    <i class="fas fa-tachometer-alt"></i> 
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" id="qr-code-link" class="nav-link">
+                    <i class="fas fa-qrcode"></i>
+                    <span>My QR Code</span>
+                </a>
+                <a href="/contact" class="nav-link">
+                    <i class="fas fa-envelope"></i>
+                    <span>Contact</span>
+                </a>
+            </div>
+            <div class="nav-group">
+                <a href="#" id="clear-dashboard-link" class="nav-link danger">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>Clear Dashboard</span>
+                </a>
+                <a href="/" class="nav-link">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </a>
+                
+            </div>
+        </nav>
+        <button type="button" class="mobile-menu-toggle" id="dashboard-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="dashboard-header-nav">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+    </div>
+</header>
+
+    <!-- QR Code Modal -->
+    <div id="qrCodeModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h2>Your Cafe QR Code</h2>
+            <img id="modalQrCodeImage" src="" alt="QR Code">
+            <button id="downloadQrCodeBtn" class="button">
+                <i class="fas fa-download"></i> Download QR Code
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2><i class="fas fa-folder-open"></i> Cyber Cafe Documents</h2>
+            <div id="documentList">
+                <div class="empty-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>Loading documents...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2026 SwiftCyber. All rights reserved.
+    </footer>
+
+    <script>
+        let cafeId;
+        let subscriptionState = {
+            isExpired: false,
+            type: null, // 'trial' or 'premium'
+            initialized: false
+        };
+        
+        
+        // Function to initialize cafeId
+        async function initializeCafeId() {
+            try {
+                // First try to get from URL
+                const urlParams = new URLSearchParams(window.location.search);
+                cafeId = urlParams.get('cafeId');
+        
+                // If not in URL, try to get from server
+                if (!cafeId) {
+                    const response = await fetch('/dashboard/get-unique-id');
+                    const data = await response.json();
+                    if (response.ok && data.uniqueId) {
+                        cafeId = data.uniqueId;
+                    } else {
+                        throw new Error('Failed to get cafe ID');
+                    }
+                }
+            } catch (error) {
+                console.error('Error initializing cafe ID:', error);
+                alert('Error loading cafe information. Please try logging in again.');
+                window.location.href = '/login';
+            }
+        }
+            // Clear dashboard functionality
+        const clearDashboardLink = document.getElementById('clear-dashboard-link');
+
+        if (clearDashboardLink) clearDashboardLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    if (!confirm('Are you sure you want to clear all documents from the dashboard? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/dashboard/clear-dashboard/${cafeId}`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            // Clear the document list immediately
+            documentList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-folder-open"></i>
+                    <p>No documents</p>
+                </div>
+            `;
+            alert('Dashboard cleared successfully!');
+        } else {
+            throw new Error(data.error || 'Failed to clear dashboard');
+        }
+    } catch (error) {
+        console.error('Error clearing dashboard:', error);
+        alert('Failed to clear dashboard. Please try again later.');
+    }
+});
+        
+        // QR Code functionality
+        const qrCodeLink = document.getElementById('qr-code-link');
+        const qrCodeModal = document.getElementById('qrCodeModal');
+        const modalClose = document.querySelector('.modal-close');
+        const modalQrCodeImage = document.getElementById('modalQrCodeImage');
+        const downloadQrCodeBtn = document.getElementById('downloadQrCodeBtn');
+        
+        async function fetchAndDisplayQrCode() {
+            try {
+                if (!cafeId) {
+                    throw new Error('Cafe ID not initialized');
+                }
+        
+                const response = await fetch('/dashboard/get-qr-code');
+                const data = await response.json();
+                
+                if (response.ok && data.qrCodeUrl) {
+                    modalQrCodeImage.src = data.qrCodeUrl;
+                    qrCodeModal.style.display = 'flex';
+                } else {
+                    throw new Error(data.message || 'Failed to fetch QR code');
+                }
+            } catch (error) {
+                console.error('Error fetching QR code:', error);
+                alert('Could not retrieve QR code. Please try again later.');
+            }
+        }
+        
+        // Document listing functionality
+        const documentList = document.getElementById('documentList');
+        let isTrialExpired = false;
+        
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateString).toLocaleDateString(undefined, options);
+        }
+        
+        async function checkTrialStatus() {
+            try {
+                const response = await fetch(`/payment/trial-status/${cafeId}`);
+                const data = await response.json();
+                
+                // Reset state
+                subscriptionState.initialized = true;
+                
+                if (data.subscriptionStatus === 'premium') {
+                    subscriptionState.isExpired = false;
+                    subscriptionState.type = 'premium';
+                    showPremiumStatus(data.hoursRemaining);
+                    return true;
+                }
+                
+                if (data.subscriptionStatus === 'expired') {
+                    subscriptionState.isExpired = true;
+                    subscriptionState.type = 'premium';
+                    handleExpiredSubscription();
+                    return false;
+                }
+                
+                if (data.isExpired) {
+                    subscriptionState.isExpired = true;
+                    subscriptionState.type = 'trial';
+                    handleExpiredTrial();
+                    return false;
+                } else {
+                    subscriptionState.isExpired = false;
+                    subscriptionState.type = 'trial';
+                    updateTrialProgress(data);
+                    // if (data.hoursRemaining <= 1) {
+                        // showTrialWarning(data.hoursRemaining);
+                    // }
+                    return true;
+                }
+            } catch (error) {
+                console.error('Error checking subscription status:', error);
+                return false;
+            }
+        }
+function handleExpiredSubscription() {
+    document.querySelectorAll('.header-nav a:not(#upgrade-link)').forEach(link => {
+        link.style.pointerEvents = 'none';
+        link.style.opacity = '0.5';
+    });
+
+    documentList.innerHTML = `
+        <div class="trial-expired">
+            <i class="fas fa-lock"></i>
+            <h3>Premium Subscription Expired</h3>
+            <p>Your premium subscription has ended. Renew now to continue accessing all premium features.</p>
+            <button class="upgrade-button" onclick="window.location.href='/mpesa_stk'">
+                <i class="fas fa-sync"></i> Renew Premium
+            </button>
+            <div class="premium-features">
+                <h4>Premium Features Include:</h4>
+                <ul>
+                    <li><i class="fas fa-check"></i> Unlimited document access</li>
+                    <li><i class="fas fa-check"></i> Priority support</li>
+                    <li><i class="fas fa-check"></i> Advanced analytics</li>
+                    <li><i class="fas fa-check"></i> Custom branding</li>
+                </ul>
+            </div>
+        </div>
+    `;
+} 
+        // Get the logout link
+        const logoutLink = document.querySelector('.header-nav a[href="/"]');
+
+        if (logoutLink) logoutLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    
+    try {
+        const response = await fetch('/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            // Clear client-side storage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            // Clear browser history
+            window.history.pushState(null, '', '/login');
+            window.onpopstate = function(event) {
+                window.history.pushState(null, '', '/login');
+            };
+            
+            // Redirect to login
+            window.location.replace('/login');
+        } else {
+            throw new Error('Logout failed');
+        }
+    } catch (error) {
+        console.error('Error during logout:', error);
+        alert('Failed to logout. Please try again.');
+    }
+});
+function showPremiumStatus(hoursRemaining) {
+    // Remove existing premium badge if any
+    const existingBadge = document.querySelector('.premium-badge');
+    if (existingBadge) {
+        existingBadge.remove();
+    }
+
+    const header = document.querySelector('.header-content');
+    const premiumBadge = document.createElement('div');
+    premiumBadge.className = 'premium-badge';
+    
+    // Add remaining time to the badge
+    premiumBadge.innerHTML = `
+        <i class="fas fa-crown"></i> Premium Member
+        
+    `;
+    header.appendChild(premiumBadge);
+
+    // Show warning if less than 15 minutes remaining
+    if (hoursRemaining < 0.25) {
+        showPremiumExpiryWarning(hoursRemaining);
+    }
+}
+      function showPremiumExpiryWarning(hoursRemaining) {
+    const minutesRemaining = Math.ceil(hoursRemaining * 60);
+    const warningBanner = document.createElement('div');
+    warningBanner.className = 'premium-warning';
+    warningBanner.innerHTML = `
+        <i class="fas fa-exclamation-triangle"></i>
+        Premium subscription ending in ${minutesRemaining} minute${minutesRemaining === 1 ? '' : 's'}. 
+        <a href="/mpesa_stk" class="renew-link">Renew now</a> to maintain access.
+    `;
+    document.body.prepend(warningBanner);
+}
+   
+    function updateTrialProgress(data) {
+        // First check if container already exists
+        let trialIndicator = document.querySelector('.trial-indicator');
+            
+        if (!trialIndicator) {
+            // Create indicator only if it doesn't exist
+            trialIndicator = document.createElement('div');
+            trialIndicator.className = 'trial-indicator';
+            trialIndicator.innerHTML = `
+                <div class="trial-container">
+                    <span class="dot"></span>
+                    <span class="trial-text">Trial Period</span>
+                </div>
+            `;
+            document.querySelector('.header-content').appendChild(trialIndicator);
+        }
+    }
+        
+        function handleExpiredTrial() {
+            document.querySelectorAll('.header-nav a:not(#upgrade-link)').forEach(link => {
+                link.style.pointerEvents = 'none';
+                link.style.opacity = '0.5';
+            });
+        
+            documentList.innerHTML = `
+                <div class="trial-expired">
+                    <i class="fas fa-lock"></i>
+                    <h3>Trial Period Expired</h3>
+                    <p>Your 5-hour trial period has ended. Upgrade to premium to continue accessing all features.</p>
+                    <button class="upgrade-button" onclick="window.location.href='/mpesa_stk'">
+                        <i class="fas fa-crown"></i> Upgrade to Premium
+                    </button>
+                    <div class="premium-features">
+                        <h4>Premium Features Include:</h4>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Unlimited document access</li>
+                            <li><i class="fas fa-check"></i> Priority support</li>
+                            <li><i class="fas fa-check"></i> Advanced analytics</li>
+                            <li><i class="fas fa-check"></i> Custom branding</li>
+                        </ul>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // function showTrialWarning(hoursRemaining) {
+        //    const warningBanner = document.createElement('div');
+        //    warningBanner.className = 'trial-warning';
+         //   warningBanner.innerHTML = `
+        //        <i class="fas fa-exclamation-triangle"></i>
+        //        Trial ending in ${Math.ceil(hoursRemaining)} hour${hoursRemaining < 2 ? '' : 's'}. 
+        //        <a href="/upgrade" class="upgrade-link">Upgrade now</a> to continue using SwiftCyber.
+        //    `;
+        //    document.body.prepend(warningBanner);
+        //}
+        
+        async function listDocuments() {
+            // Wait for subscription state to be initialized
+            if (!subscriptionState.initialized) {
+                return;
+            }
+
+            // Check subscription state first
+            if (subscriptionState.isExpired) {
+                if (subscriptionState.type === 'trial') {
+                    handleExpiredTrial();
+                } else {
+                    handleExpiredSubscription();
+                }
+                return;
+            }
+
+            try {
+                const response = await fetch(`/files/documents/${cafeId}`);
+                const data = await response.json();
+
+                if (data.documents.length === 0) {
+                    documentList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-folder-open"></i>
+                            <p>No documents</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                renderDocuments(data.documents);
+
+            } catch (error) {
+                console.error("Error fetching documents: ", error);
+                documentList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <p>Error fetching documents: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+       
+        listDocuments();
+        
+        // Event Listeners
+        function setupDashboardMobileNav() {
+            const toggle = document.getElementById('dashboard-menu-toggle');
+            const nav = document.getElementById('dashboard-header-nav');
+            if (!toggle || !nav) return;
+
+            const mqCollapse = window.matchMedia('(max-width: 900px)');
+
+            const setMenuOpen = (open) => {
+                nav.classList.toggle('active', open);
+                toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+                toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+                document.body.classList.toggle('dashboard-nav-open', open && mqCollapse.matches);
+            };
+
+            toggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setMenuOpen(!nav.classList.contains('active'));
+            });
+
+            nav.querySelectorAll('.nav-link').forEach((link) => {
+                link.addEventListener('click', () => {
+                    if (mqCollapse.matches) setMenuOpen(false);
+                });
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!nav.classList.contains('active') || !mqCollapse.matches) return;
+                if (toggle.contains(e.target) || nav.contains(e.target)) return;
+                setMenuOpen(false);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && nav.classList.contains('active')) {
+                    setMenuOpen(false);
+                }
+            });
+
+            const onMqChange = () => {
+                if (!mqCollapse.matches) setMenuOpen(false);
+            };
+            if (typeof mqCollapse.addEventListener === 'function') {
+                mqCollapse.addEventListener('change', onMqChange);
+            } else if (typeof mqCollapse.addListener === 'function') {
+                mqCollapse.addListener(onMqChange);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            setupDashboardMobileNav();
+            await initializeCafeId();
+            
+            // Set up contact link with cafeId
+            const contactLink = document.querySelector('.header-nav a[href="/contact"]');
+            if (contactLink) {
+                contactLink.href = `/contact?cafeId=${cafeId}`;
+            }
+            
+            // QR Code event listeners
+            qrCodeLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                await fetchAndDisplayQrCode();
+            });
+        
+            modalClose.addEventListener('click', () => {
+                qrCodeModal.style.display = 'none';
+            });
+        
+            downloadQrCodeBtn.addEventListener('click', async () => {
+                try {
+                    window.location.href = `/qrcode/api/qr-code/${cafeId}/download`;
+                } catch (error) {
+                    console.error('Error downloading QR code:', error);
+                    alert('Failed to download QR code. Please try again later.');
+                }
+            });
+        
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target === qrCodeModal) {
+                    qrCodeModal.style.display = 'none';
+                }
+            });
+        
+            // Initialize dashboard
+            await checkTrialStatus();
+            await listDocuments();
+    
+    // Keep checking trial status
+    setInterval(async () => {
+        await checkTrialStatus();
+        await listDocuments();
+    }, 1000);
+        });
+
+         function renderDocuments(documents) {
+    if (!documents || documents.length === 0) {
+        documentList.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-folder-open"></i>
+                <p>No documents</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Function to check if file is printable based on extension
+    function isPrintableFile(filename) {
+        const printableExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.gif', '.bmp'];
+        const extension = filename.toLowerCase().slice(filename.lastIndexOf('.'));
+        return printableExtensions.includes(extension);
+    }
+
+    // Group documents by sender
+    const groupedDocs = documents.reduce((groups, doc) => {
+        const group = groups[doc.senderName] || [];
+        group.push(doc);
+        groups[doc.senderName] = group;
+        return groups;
+    }, {});
+
+    // Sort senders by latest document
+    const sortedSenders = Object.entries(groupedDocs)
+        .sort((a, b) => {
+            const latestA = Math.max(...a[1].map(doc => doc.timeStamp));
+            const latestB = Math.max(...b[1].map(doc => doc.timeStamp));
+            return latestB - latestA;
+        });
+
+    documentList.innerHTML = '';
+    
+    sortedSenders.forEach(([sender, docs]) => {
+        // Sort documents within each sender group by timestamp
+        docs.sort((a, b) => b.timeStamp - a.timeStamp);
+
+        const senderGroup = document.createElement('div');
+        senderGroup.className = 'sender-group';
+        
+        const senderHeader = document.createElement('div');
+        senderHeader.className = 'sender-header';
+        senderHeader.innerHTML = `
+            <i class="fas fa-user sender-icon"></i>
+            <span class="sender-name">${sender}</span>
+        `;
+        
+        const docsList = document.createElement('ul');
+        docs.forEach(doc => {
+            const isPrintable = isPrintableFile(doc.name);
+            
+            const actionButton = isPrintable ? 
+                `<button class="button" onclick="window.open('${doc.url}', 'printWindow').print();">
+                    <i class="fas fa-print"></i> Print
+                </button>` :
+                `<button class="button" onclick="window.location.href='${doc.url}'">
+                    <i class="fas fa-download"></i> Download
+                </button>`;
+
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <div class="document-info">
+                    <i class="fas fa-file-alt"></i>
+                    <a href="${doc.url}" target="_blank">${doc.name}</a>
+                    <span class="upload-date">${formatDate(doc.uploadDate)}</span>
+                </div>
+                ${actionButton}
+            `;
+            docsList.appendChild(listItem);
+        });
+
+        senderGroup.appendChild(senderHeader);
+        senderGroup.appendChild(docsList);
+        documentList.appendChild(senderGroup);
+    });
+}
+        
+        </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

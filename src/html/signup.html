@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>SwiftCyber - Signup</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/signup.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body>
+    <div id="signupPage">
+        <h2>Sign Up for SwiftCyber</h2>
+        <!-- Added alert message div -->
+        <div id="alertMessage" class="alert" style="display: none;"></div>
+        
+        <form id="signupForm" action="/auth/api/signup" method="POST">
+            <input type="text" id="cafeName" name="cafeName" placeholder="Cyber Cafe Name" required>
+            <select id="location" name="location" required>
+                <option value="" disabled selected>Select Option</option>
+                <option value="baringo">Baringo</option>
+                <option value="bomet">Bomet</option>
+                <option value="bungoma">Bungoma</option>
+                <option value="busia">Busia</option>
+                <option value="elgeyo-marakwet">Elgeyo Marakwet</option>
+                <option value="embu">Embu</option>
+                <option value="garissa">Garissa</option>
+                <option value="homabay">Homa Bay</option>
+                <option value="isiolo">Isiolo</option>
+                <option value="kajiado">Kajiado</option>
+                <option value="kakamega">Kakamega</option>
+                <option value="kericho">Kericho</option>
+                <option value="kiambu">Kiambu</option>
+                <option value="kilifi">Kilifi</option>
+                <option value="kirinyaga">Kirinyaga</option>
+                <option value="kisii">Kisii</option>
+                <option value="kisumu">Kisumu</option>
+                <option value="kitui">Kitui</option>
+                <option value="kwale">Kwale</option>
+                <option value="laikipia">Laikipia</option>
+                <option value="lamu">Lamu</option>
+                <option value="machakos">Machakos</option>
+                <option value="makueni">Makueni</option>
+                <option value="mandera">Mandera</option>
+                <option value="marsabit">Marsabit</option>
+                <option value="meru">Meru</option>
+                <option value="migori">Migori</option>
+                <option value="mombasa">Mombasa</option>
+                <option value="muranga">Murang'a</option>
+                <option value="nairobi">Nairobi</option>
+                <option value="nakuru">Nakuru</option>
+                <option value="nandi">Nandi</option>
+                <option value="narok">Narok</option>
+                <option value="nyamira">Nyamira</option>
+                <option value="nyandarua">Nyandarua</option>
+                <option value="nyeri">Nyeri</option>
+                <option value="samburu">Samburu</option>
+                <option value="siaya">Siaya</option>
+                <option value="taita-taveta">Taita Taveta</option>
+                <option value="tana-river">Tana River</option>
+                <option value="tharaka-nithi">Tharaka Nithi</option>
+                <option value="trans-nzoia">Trans Nzoia</option>
+                <option value="turkana">Turkana</option>
+                <option value="uasin-gishu">Uasin Gishu</option>
+                <option value="vihiga">Vihiga</option>
+                <option value="wajir">Wajir</option>
+                <option value="west-pokot">West Pokot</option>
+
+            </select>
+            <input type="email" id="email" name="email" placeholder="Email" required>
+            <div class="password-container">
+                <input type="password" id="password" name="password" placeholder="Password" required>
+                <i id="togglePassword" class="far fa-eye"></i>
+            </div>
+            <div class="terms-container">
+                <input type="checkbox" id="terms" required>
+                <label for="terms">
+                    I accept the <a href="/terms">Terms and Conditions</a>
+                </label>
+            </div>
+            <!-- Updated button with ID and spinner -->
+            <button type="submit" id="submitBtn">
+                <span class="btn-text">Sign Up</span>
+                <span class="spinner" style="display: none;">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </button>
+        </form>
+        <p>Already have an account? <a href="/login">Login</a></p>
+    </div>
+
+    <style>
+        .alert {
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef9a9a;
+        }
+        .spinner {
+            margin-left: 8px;
+        }
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('signupForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const alertMessage = document.getElementById('alertMessage');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+
+            // Toggle password visibility
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+
+            // Form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Clear previous alerts
+                alertMessage.style.display = 'none';
+                alertMessage.textContent = '';
+
+                // Show loading state
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.btn-text').style.display = 'none';
+                submitBtn.querySelector('.spinner').style.display = 'inline-block';
+
+                try {
+                    // Create an object from form data
+                    const formData = new FormData(form);
+                    const formObject = {};
+                    formData.forEach((value, key) => {
+                        formObject[key] = value;
+                    });
+
+                    const response = await fetch('/auth/api/signup', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(formObject)
+                    });
+
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                        return;
+                    }
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Signup failed');
+                    }
+                } catch (error) {
+                    // Show error message
+                    alertMessage.textContent = error.message;
+                    alertMessage.style.display = 'block';
+                } finally {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('.btn-text').style.display = 'inline';
+                    submitBtn.querySelector('.spinner').style.display = 'none';
+                }
+            });
+        });
+    </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

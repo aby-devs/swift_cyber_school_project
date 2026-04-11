@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — M-Pesa payment for Swift Cyber.">
+    <title>M-Pesa Payment</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .header h1 {
+            color: #00a884;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #5f6368;
+        }
+
+        .logo {
+            width: 100px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+
+        .amount-display {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            background-color: #e6f7f5;
+            border-radius: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .amount-display:hover {
+            background-color: #d1f0ec;
+        }
+
+        .amount-display h2 {
+            color: #00a884;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .amount-display p {
+            color: #5f6368;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #202124;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #dadce0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #00a884;
+            box-shadow: 0 0 0 3px rgba(0, 168, 132, 0.2);
+        }
+
+        input[readonly] {
+            background-color: #f8f9fa;
+            cursor: not-allowed;
+        }
+
+        button {
+            width: 100%;
+            padding: 1rem;
+            background-color: #00a884;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            background-color: #008f6f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        .response-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success {
+            background-color: #e6f4ea;
+            color: #1e8e3e;
+            display: block;
+        }
+
+        .error {
+            background-color: #fce8e6;
+            color: #d93025;
+            display: block;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .loading::after {
+            content: "Processing payment...";
+            color: #5f6368;
+            display: inline-block;
+            animation: ellipsis 1.5s infinite;
+        }
+
+        .redirect-button {
+            display: none;
+            margin-top: 1rem;
+            text-decoration: none;
+            text-align: center;
+            padding: 1rem;
+            background-color: #4285f4;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .redirect-button:hover {
+            background-color: #3367d6;
+            transform: translateY(-2px);
+        }
+
+        @keyframes ellipsis {
+            0% { content: "Processing payment"; }
+            33% { content: "Processing payment."; }
+            66% { content: "Processing payment.."; }
+            100% { content: "Processing payment..."; }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 12px;
+                align-items: flex-start;
+                padding-top: max(12px, env(safe-area-inset-top));
+            }
+
+            .container {
+                padding: 1.25rem;
+            }
+
+            .container:hover {
+                transform: none;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .amount-display h2 {
+                font-size: 1.75rem;
+            }
+
+            input {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/M-PESA_LOGO-01.svg/1200px-M-PESA_LOGO-01.svg.png" alt="M-Pesa Logo" class="logo">
+            <h1>M-Pesa Payment</h1>
+            <p>Enter your phone number to proceed with payment</p>
+        </div>
+        <div class="amount-display">
+            <h2>KES 1</h2>
+            <p>Fixed Payment Amount</p>
+        </div>
+        <form id="paymentForm">
+            <div class="form-group">
+                <label for="uniqueId">Cyber ID</label>
+                <input type="text" id="uniqueId" name="uniqueId" readonly>
+            </div>
+            <div class="form-group">
+                <label for="phoneNumber">Phone Number</label>
+                <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="254XXXXXXXXX" required>
+            </div>
+            <button type="submit">Pay Now</button>
+        </form>
+        <div class="loading" id="loading"></div>
+        <div class="response-message" id="responseMessage"></div>
+        <a href="/dashboard" class="redirect-button" id="redirectButton" style="display: none;">Proceed to Dashboard</a>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('paymentForm');
+            const loading = document.getElementById('loading');
+            const responseMessage = document.getElementById('responseMessage');
+            const uniqueIdInput = document.getElementById('uniqueId');
+            const redirectButton = document.getElementById('redirectButton');
+
+            // Fetch and display unique ID
+            fetch('/dashboard/get-unique-id')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.uniqueId) {
+                        uniqueIdInput.value = data.uniqueId;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching unique ID:', error);
+                });
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const phoneNumber = document.getElementById('phoneNumber').value;
+                const uniqueId = document.getElementById('uniqueId').value;
+                
+                loading.style.display = 'block';
+                responseMessage.style.display = 'none';
+                redirectButton.style.display = 'none';
+                
+                try {
+                    console.log('Sending request:', { phoneNumber, uniqueId });
+
+                    const response = await fetch('/payment/api/process-payment', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ phoneNumber, uniqueId }),
+                    });
+
+                    const data = await response.json();
+                    console.log('Server response:', data);
+
+                    if (response.ok) {
+                        // Start polling for payment status
+                        const invoiceId = data.invoiceId;
+                        const pollInterval = setInterval(async () => {
+                            try {
+                                const statusResponse = await fetch(`/payment/api/check-payment/${invoiceId}`);
+                                const statusData = await statusResponse.json();
+                                
+                                if (statusData.status === 'complete') {
+                                    clearInterval(pollInterval);
+                                    responseMessage.textContent = '✅ Your payment was successfully processed! You can now access premium features.';
+                                    responseMessage.className = 'response-message success';
+                                    redirectButton.style.display = 'block';
+                                    loading.style.display = 'none';
+                                } else if (statusData.status === 'failed') {
+                                    clearInterval(pollInterval);
+                                    responseMessage.textContent = '❌ Payment failed. Please try again.';
+                                    responseMessage.className = 'response-message error';
+                                    loading.style.display = 'none';
+                                }
+                            } catch (error) {
+                                console.error('Error polling payment status:', error);
+                            }
+                        }, 5000); // Poll every 5 seconds
+
+                        // Initial message while waiting for payment
+                        responseMessage.textContent = 'Please check your phone for the STK push and complete the payment.';
+                        responseMessage.className = 'response-message';
+                        responseMessage.style.display = 'block';
+                    } else {
+                        responseMessage.textContent = data.error || '❌ Payment failed. Please try again.';
+                        responseMessage.className = 'response-message error';
+                        loading.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    responseMessage.textContent = '❌ An error occurred. Please try again.';
+                    responseMessage.className = 'response-message error';
+                    loading.style.display = 'none';
+                }
+            });
+        });
+    </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>

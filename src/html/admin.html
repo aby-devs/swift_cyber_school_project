@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+        <title>SwiftCyber Admin Panel</title>
+        <link rel="manifest" href="/manifest.webmanifest">
+        <meta name="theme-color" content="#3498db">
+        <meta name="mobile-web-app-capable" content="yes">
+        <link rel="apple-touch-icon" href="/icons/icon-192.png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="../css/admin.css">
+        <link rel="stylesheet" href="/css/responsive-shared.css">
+    </head>
+    <body class="admin-body">
+        <div class="loading-overlay">
+            <i class="fas fa-spinner fa-spin loading-spinner"></i>
+        </div>
+
+        <div class="container">
+            <div class="header">
+                <h1>
+                    SwiftCyber Admin Panel
+                    <button onclick="loadUsers()" class="refresh-button">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </h1>
+            </div>
+            <div id="userList" class="user-list">
+                <div style="text-align: center; padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> Loading users...
+                </div>
+            </div>
+        </div>
+
+        <script>
+            const loadingOverlay = document.querySelector('.loading-overlay');
+
+            function showLoading() {
+                loadingOverlay.style.display = 'flex';
+            }
+
+            function hideLoading() {
+                loadingOverlay.style.display = 'none';
+            }
+
+            async function getTrialStatus(cafeId) {
+                const response = await fetch(`/payment/trial-status/${cafeId}`);
+                return await response.json();
+            }
+
+            function getUserStatusBadge(trialStatus) {
+                if (trialStatus.isPremium) {
+                    return '<span class="user-badge premium-member"><i class="fas fa-crown"></i> Premium Member</span>';
+                } else if (trialStatus.isExpired) {
+                    return '<span class="user-badge needs-upgrade"><i class="fas fa-exclamation-circle"></i> Needs Upgrade</span>';
+                } else {
+                    // New user on trial
+                    return '<span class="user-badge new-user"><i class="fas fa-star"></i> New User</span>';
+                }
+            }
+
+            function getTrialInfo(trialStatus) {
+                if (trialStatus.isPremium) {
+                    const endDate = new Date(trialStatus.premiumEndDate);
+                    const remaining = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60)));
+                    return `<div class="trial-info"><i class="fas fa-clock"></i> Premium expires in ${remaining} minutes</div>`;
+                } else if (trialStatus.isExpired) {
+                    return '<div class="trial-info"><i class="fas fa-times-circle"></i> Trial expired</div>';
+                } else {
+                    return `<div class="trial-info"><i class="fas fa-hourglass-half"></i> Trial period: ${trialStatus.hoursRemaining} hours remaining</div>`;
+                }
+            }
+
+            async function loadUsers() {
+                showLoading();
+                try {
+                    const response = await fetch('/admin/users');
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    const userList = document.getElementById('userList');
+                    userList.innerHTML = '';
+
+                    for (const user of data.users) {
+                        const trialStatus = await getTrialStatus(user.cafeId);
+                        const userCard = document.createElement('div');
+                        userCard.className = 'user-card';
+
+                        let statusClass = '';
+                        let statusText = '';
+                        let timeInfo = '';
+                        let progressBar = '';
+
+                        if (trialStatus.isPremium) {
+                            statusClass = 'status-premium';
+                            statusText = 'Premium';
+                            const endDate = new Date(trialStatus.premiumEndDate);
+                            const remaining = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60)));
+                            timeInfo = `(${remaining} minutes remaining)`;
+                        } else if (trialStatus.isExpired) {
+                            statusClass = 'status-expired';
+                            statusText = 'Expired';
+                        } else {
+                            statusClass = 'status-trial';
+                            statusText = 'Trial';
+                            timeInfo = `(${trialStatus.hoursRemaining} hours remaining)`;
+                            progressBar = `
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: ${trialStatus.progressPercentage}%"></div>
+                            </div>
+                        `;
+                        }
+
+                        userCard.innerHTML = `
+                        <div class="user-info">
+                            <div class="user-name">
+                                ${user.cafeName}
+                                <span class="status-badge ${statusClass}">${statusText}</span>
+                                ${getUserStatusBadge(trialStatus)}
+                                <span class="time-remaining">${timeInfo}</span>
+                            </div>
+                            <div class="user-email">ID: ${user.cafeId} | ${user.email}</div>
+                            ${getTrialInfo(trialStatus)}
+                            ${progressBar}
+                        </div>
+                        <div class="action-buttons">
+                            <button 
+                                class="upgrade-btn" 
+                                onclick="upgradeToPremium('${user.cafeId}')"
+                                ${trialStatus.isPremium ? 'disabled' : ''}
+                            >
+                                ${trialStatus.isPremium ? 'Already Premium' : 'Upgrade to Premium'}
+                            </button>
+                            <button 
+                                class="downgrade-btn" 
+                                onclick="downgradePremium('${user.cafeId}')"
+                                ${!trialStatus.isPremium ? 'disabled' : ''}
+                            >
+                                Downgrade
+                            </button>
+                        </div>
+                    `;
+
+                        userList.appendChild(userCard);
+                    }
+
+                } catch (error) {
+                    console.error('Error loading users:', error);
+                    document.getElementById('userList').innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: red;">
+                        Error loading users: ${error.message}
+                    </div>
+                `;
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Existing upgrade and downgrade functions remain the same
+            async function upgradeToPremium(cafeId) {
+                if (!confirm('Are you sure you want to upgrade this user to premium?')) {
+                    return;
+                }
+
+                showLoading();
+                try {
+                    const response = await fetch('/admin/upgrade-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ cafeId })
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    alert('User upgraded to premium successfully!');
+                    loadUsers();
+
+                } catch (error) {
+                    console.error('Error upgrading user:', error);
+                    alert(`Error upgrading user: ${error.message}`);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            async function downgradePremium(cafeId) {
+                if (!confirm('Are you sure you want to downgrade this user? Their access will be restricted immediately.')) {
+                    return;
+                }
+
+                showLoading();
+                try {
+                    const response = await fetch('/admin/downgrade-user', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ cafeId })
+                    });
+
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.message);
+                    }
+
+                    alert('User downgraded successfully!');
+                    loadUsers();
+
+                } catch (error) {
+                    console.error('Error downgrading user:', error);
+                    alert(`Error downgrading user: ${error.message}`);
+                } finally {
+                    hideLoading();
+                }
+            }
+
+            // Initialize
+            document.addEventListener('DOMContentLoaded', () => {
+                loadUsers();
+                // Refresh user list every 30 seconds
+                setInterval(loadUsers, 30000);
+            });
+        </script>
+        <script src="/js/pwa-register.js"></script>
+    </body>
+</html>

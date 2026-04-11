@@ -1,0 +1,120 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+#welcomePage {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    max-width: 500px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+h2 {
+    text-align: center;
+    color: #4a5568;
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+p {
+    text-align: center;
+    color: #4a5568;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    color: #4a5568;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+input[readonly] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #f7fafc;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+#qrCodeContainer {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: #f7fafc;
+    border-radius: 8px;
+}
+
+#qrCodeImage {
+    max-width: 100%;
+    height: auto;
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 10px;
+    background-color: white;
+}
+
+#proceedBtn {
+    width: 100%;
+    background-color: #4299e1;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+}
+
+#proceedBtn:hover {
+    background-color: #3182ce;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #4a5568;
+}
+
+.error {
+    color: #e53e3e;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        box-sizing: border-box;
+    }
+
+    #welcomePage {
+        padding: 1.5rem 1.1rem;
+    }
+}

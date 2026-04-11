@@ -1,0 +1,146 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    min-height: 100dvh;
+    box-sizing: border-box;
+}
+
+
+.login-container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.login-heading {
+    text-align: center;
+    color: #4a5568;
+    margin-bottom: 30px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.input-field {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #4299e1 !important;
+    box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.2);
+}
+
+.password-container {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #4a5568;
+    font-size: 16px;
+}
+
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.remember-label {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #4a5568;
+    gap: 8px;
+}
+
+.remember-checkbox {
+    width: 16px;
+    height: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+}
+
+.forgot-password {
+    color: #4299e1;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    color: #3182ce;
+}
+
+.submit-button {
+    background-color: #4299e1;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-weight: 500;
+}
+
+.submit-button:hover {
+    background-color: #3182ce;
+}
+
+.signup-link {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #4a5568;
+}
+
+.signup-link-text {
+    color: #4299e1;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.signup-link-text:hover {
+    color: #3182ce;
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 12px;
+        padding-top: max(12px, env(safe-area-inset-top));
+        box-sizing: border-box;
+    }
+
+    .login-container {
+        padding: 28px 20px;
+    }
+}

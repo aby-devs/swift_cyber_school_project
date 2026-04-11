@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Swift Cyber — cloud printing and document delivery for cyber cafés.">
+    <title>SwiftCyber - Welcome</title>
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#3498db">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../css/qrcode.css">
+    <link rel="stylesheet" href="/css/responsive-shared.css">
+</head>
+<body>
+    <!-- Welcome Page -->
+    <div id="welcomePage">
+        <h2>Welcome to SwiftCyber!</h2>
+        <p>Your account has been created successfully!</p>
+        
+        <div class="input-group">
+            <label>Your unique identifier:</label>
+            <input type="text" id="uniqueIdDisplay" readonly>
+        </div>
+        
+        <div id="qrCodeContainer">
+            <h3>Your QR Code:</h3>
+            <div id="loadingQr" class="loading">
+                <i class="fas fa-spinner fa-spin"></i> Loading QR Code...
+            </div>
+            <img id="qrCodeImage" width="350" height="350" alt="QR Code" style="display: none;">
+            <p>Right-click to save the image.</p>
+        </div>
+        
+        <div id="errorMessage" class="error" style="display: none;"></div>
+        
+        <button id="proceedBtn">Access Dashboard</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            const loadingQr = document.getElementById('loadingQr');
+            const errorMessage = document.getElementById('errorMessage');
+            const proceedBtn = document.getElementById('proceedBtn');
+
+            try {
+                // Fetch QR code URL and unique ID
+                const [qrResponse, uniqueIdResponse] = await Promise.all([
+                    fetch('/dashboard/get-qr-code'),
+                    fetch('/dashboard/get-unique-id')
+                ]);
+
+                if (!qrResponse.ok || !uniqueIdResponse.ok) {
+                    throw new Error('Failed to fetch data from server');
+                }
+
+                const qrData = await qrResponse.json();
+                const uniqueIdData = await uniqueIdResponse.json();
+
+                // Handle loading states
+                loadingQr.style.display = 'none';
+                qrCodeImage.style.display = 'block';
+
+                // Display QR code
+                qrCodeImage.src = qrData.qrCodeUrl; // Changed from qrCodePath to qrCodeUrl
+                qrCodeImage.onerror = () => {
+                    errorMessage.textContent = 'Failed to load QR code image';
+                    errorMessage.style.display = 'block';
+                    loadingQr.style.display = 'none';
+                };
+
+                // Display unique ID
+                const uniqueIdDisplay = document.getElementById('uniqueIdDisplay');
+                uniqueIdDisplay.value = uniqueIdData.uniqueId;
+
+                // Setup proceed button
+                proceedBtn.addEventListener('click', () => {
+                    window.location.href = `/dashboard?cafeId=${uniqueIdData.uniqueId}`;
+                });
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                loadingQr.style.display = 'none';
+                errorMessage.textContent = 'Failed to load QR code or unique ID. Please refresh the page.';
+                errorMessage.style.display = 'block';
+            }
+        });
+
+        // Additional QR code image handling
+        document.getElementById('qrCodeImage').addEventListener('load', function() {
+            this.style.display = 'block';
+            document.getElementById('loadingQr').style.display = 'none';
+        });
+    </script>
+    <script src="/js/pwa-register.js"></script>
+</body>
+</html>
