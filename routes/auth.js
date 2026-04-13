@@ -26,6 +26,8 @@ function withTimeout(promise, timeoutMs, stepName) {
 // Signup endpoint
 route.post('/api/signup', async (req, res) => {
     const { email, password, location, cafeName } = req.body;
+    let createdUserUid = null;
+    let createdCafeId = null;
 
     try {
         const userRecord = await withTimeout(
@@ -33,7 +35,9 @@ route.post('/api/signup', async (req, res) => {
             15000,
             'Creating user'
         );
+        createdUserUid = userRecord.uid;
         const uniqueId = generateUniqueId(location);
+        createdCafeId = uniqueId;
         const qrCodeUrl = await withTimeout(
             generateQRCode(uniqueId),
             15000,
@@ -58,12 +62,6 @@ route.post('/api/signup', async (req, res) => {
             `,
         };
 
-        await withTimeout(
-            transporter.sendMail(mailOptions),
-            12000,
-            'Sending verification email'
-        );
-
         // Set trial dates (5 hours from now)
         const trialStartDate = new Date();
         //const trialEndDate = new Date(trialStartDate.getTime() + (2 * 24 * 60 * 60 * 1000)); // 2 days
@@ -83,6 +81,17 @@ route.post('/api/signup', async (req, res) => {
             subscriptionStatus: 'trial' // Add subscription status
         }), 10000, 'Saving cafe data');
 
+        // Send verification email, but don't block signup if SMTP provider times out.
+        try {
+            await withTimeout(
+                transporter.sendMail(mailOptions),
+                12000,
+                'Sending verification email'
+            );
+        } catch (mailError) {
+            console.error('Signup email send failed:', mailError);
+        }
+
         res.cookie('uniqueId', uniqueId, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000
@@ -91,6 +100,23 @@ route.post('/api/signup', async (req, res) => {
         res.redirect(`/verification?email=${encodeURIComponent(email)}&uniqueId=${uniqueId}`);
     } catch (error) {
         console.error('Signup Error:', error);
+
+        // Best-effort cleanup to avoid partially-created accounts blocking retry.
+        if (createdCafeId) {
+            try {
+                await admin.database().ref(`cafes/${createdCafeId}`).remove();
+            } catch (cleanupError) {
+                console.error('Signup cleanup cafe error:', cleanupError);
+            }
+        }
+        if (createdUserUid) {
+            try {
+                await admin.auth().deleteUser(createdUserUid);
+            } catch (cleanupError) {
+                console.error('Signup cleanup user error:', cleanupError);
+            }
+        }
+
         res.status(500).json({ message: 'Signup failed', error: error.message });
     }
 });
