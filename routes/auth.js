@@ -13,18 +13,39 @@ function generateUniqueId(county) {
     return `${county}-${uuidv4().split('-')[0].toUpperCase()}`;
 }
 
+function withTimeout(promise, timeoutMs, stepName) {
+    let timeoutId;
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${stepName} timed out after ${timeoutMs}ms`)), timeoutMs);
+    });
+
+    return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeoutId));
+}
+
 
 // Signup endpoint
 route.post('/api/signup', async (req, res) => {
     const { email, password, location, cafeName } = req.body;
 
     try {
-        const userRecord = await admin.auth().createUser({ email, password });
+        const userRecord = await withTimeout(
+            admin.auth().createUser({ email, password }),
+            15000,
+            'Creating user'
+        );
         const uniqueId = generateUniqueId(location);
-        const qrCodeUrl = await generateQRCode(uniqueId);
+        const qrCodeUrl = await withTimeout(
+            generateQRCode(uniqueId),
+            15000,
+            'Generating QR code'
+        );
 
         // Generate and send verification email
-        const verificationLink = await admin.auth().generateEmailVerificationLink(email);
+        const verificationLink = await withTimeout(
+            admin.auth().generateEmailVerificationLink(email),
+            10000,
+            'Generating verification link'
+        );
         const mailOptions = {
             from: transporter.defaultFrom,
             to: email,
@@ -37,7 +58,11 @@ route.post('/api/signup', async (req, res) => {
             `,
         };
 
-        await transporter.sendMail(mailOptions);
+        await withTimeout(
+            transporter.sendMail(mailOptions),
+            12000,
+            'Sending verification email'
+        );
 
         // Set trial dates (5 hours from now)
         const trialStartDate = new Date();
@@ -47,7 +72,7 @@ route.post('/api/signup', async (req, res) => {
         // Save cafe data
         const db = admin.database();
         const cafeRef = db.ref(`cafes/${uniqueId}`);
-        await cafeRef.set({
+        await withTimeout(cafeRef.set({
             cafeName,
             location,
             email,
@@ -56,7 +81,7 @@ route.post('/api/signup', async (req, res) => {
             trialStartDate: trialStartDate.toISOString(),
             trialEndDate: trialEndDate.toISOString(),
             subscriptionStatus: 'trial' // Add subscription status
-        });
+        }), 10000, 'Saving cafe data');
 
         res.cookie('uniqueId', uniqueId, {
             httpOnly: true,
@@ -66,7 +91,7 @@ route.post('/api/signup', async (req, res) => {
         res.redirect(`/verification?email=${encodeURIComponent(email)}&uniqueId=${uniqueId}`);
     } catch (error) {
         console.error('Signup Error:', error);
-        res.status(400).json({ message: 'Signup failed', error: error.message });
+        res.status(500).json({ message: 'Signup failed', error: error.message });
     }
 });
 

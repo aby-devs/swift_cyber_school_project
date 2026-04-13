@@ -8,8 +8,14 @@ async function generateQRCode(uniqueId) {
         const cafeUrl = `https://swift-cyber-school-project.onrender.com/upload?cafeId=${uniqueId}`;
         //const cafeUrl = `https://noisy-rough-market.glitch.me/upload.html?cafeId=${uniqueId}`;
         const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(cafeUrl)}`;
-
-        const response = await fetch(qrCodeUrl);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        let response;
+        try {
+            response = await fetch(qrCodeUrl, { signal: controller.signal });
+        } finally {
+            clearTimeout(timeoutId);
+        }
         const buffer = Buffer.from(await response.arrayBuffer());
 
         const canvas = createCanvas(250, 250);
