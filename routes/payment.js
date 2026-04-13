@@ -275,7 +275,7 @@ route.post('/webhook/payment', async (req, res) => {
 
                 // Send confirmation email with premium status
                 const mailOptions = {
-                    from: process.env.EMAIL_USER,
+                    from: transporter.defaultFrom,
                     to: cafeData.email,
                     subject: 'Premium Upgrade Confirmation - Swift Cyber',
                     html: `

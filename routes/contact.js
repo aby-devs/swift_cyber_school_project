@@ -81,8 +81,8 @@ route.post('/api/contact', async (req, res) => {
 
         // Configure email with clear sender information in the display name
         const mailOptions = {
-            from: `"${cafeData.cafeName} <${cafeData.email}>" <${process.env.EMAIL_USER}>`,
-            to: process.env.EMAIL_USER,
+            from: transporter.defaultFrom,
+            to: transporter.supportEmail,
             replyTo: cafeData.email,
             subject: `New Contact Message from ${cafeData.cafeName} <${cafeData.email}>: ${subject}`,
             html: `
@@ -129,7 +129,7 @@ route.post('/api/contact', async (req, res) => {
 
         // Send confirmation email to cafe
         const confirmationMailOptions = {
-            from: process.env.EMAIL_USER,
+            from: transporter.defaultFrom,
             to: cafeData.email,
             subject: `Confirmation: We received your message - ${subject}`,
             html: `

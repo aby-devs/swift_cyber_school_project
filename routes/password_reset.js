@@ -17,7 +17,7 @@ route.post('/reset-password', async (req, res) => {
         
         // Send reset email
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: transporter.defaultFrom,
             to: email,
             subject: 'Reset Your Password',
             html: `

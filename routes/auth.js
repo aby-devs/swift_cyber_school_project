@@ -26,7 +26,7 @@ route.post('/api/signup', async (req, res) => {
         // Generate and send verification email
         const verificationLink = await admin.auth().generateEmailVerificationLink(email);
         const mailOptions = {
-            from: process.env.EMAIL_USER,
+            from: transporter.defaultFrom,
             to: email,
             subject: 'Verify Your Email',
             html: `
